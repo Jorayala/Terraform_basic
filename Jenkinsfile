@@ -6,9 +6,6 @@ pipeline {
      environment {
         WEBEXAUTH = credentials('webex-auth-token')
         WEBEXROOM = credentials('webex-roomid')
-        APICHOST = "$params.APICIP"
-        APICUSER = "$params.APICUSER"
-        APICPASSWORD = credentials('apic_password')
         AWS_ACCESS_KEY_ID     = credentials('AWS_ACCESS_KEY_ID')
         AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
     }
