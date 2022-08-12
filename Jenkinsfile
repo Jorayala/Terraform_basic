@@ -4,6 +4,11 @@ pipeline {
   terraform 'Terraform_CSS'
 }
      environment {
+        WEBEXAUTH = credentials('webex-auth-token')
+        WEBEXROOM = credentials('webex-roomid')
+        APICHOST = "$params.APICIP"
+        APICUSER = "$params.APICUSER"
+        APICPASSWORD = credentials('apic_password')
         AWS_ACCESS_KEY_ID     = credentials('AWS_ACCESS_KEY_ID')
         AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
     }
@@ -25,6 +30,38 @@ pipeline {
                 echo 'Terraform apply'
                 sh 'terraform apply --auto-approve'
             }
+        }
+    }
+    post { 
+        success { 
+          
+            wrap([$class: 'BuildUser']) {
+            sh """
+                    curl --location --request POST 'https://webexapis.com/v1/messages' \
+--header "Authorization: Bearer ${WEBEXAUTH}" \
+--header 'Content-Type: application/json' \
+--data-raw '{
+  "roomId": "${WEBEXROOM}",
+  
+  "markdown": "Started at: ${BUILD_TIMESTAMP}\\nAuthor:${env.BUILD_USER}(${env.BUILD_USER_EMAIL})\\nJob URL: ${Job_URL}\\nBuild ID: ${BUILD_NUMBER}\\nBuild Logs: ${BUILD_URL}consoleText\\nResult: ${currentBuild.currentResult}" 
+}'
+         """
+                
+            }
+        }
+        failure { 
+            
+            sh """
+                    curl --location --request POST 'https://webexapis.com/v1/messages' \
+--header "Authorization: Bearer ${WEBEXAUTH}" \
+--header 'Content-Type: application/json' \
+--data-raw '{
+  "roomId": "${WEBEXROOM}",
+  
+  "markdown": "Started at: ${BUILD_TIMESTAMP}\\nAuthor:${env.BUILD_USER}(${env.BUILD_USER_EMAIL})\\nJob URL: ${Job_URL}\\nBuild ID: ${BUILD_NUMBER}\\nBuild Logs: ${BUILD_URL}consoleText\\nResult: ${currentBuild.currentResult}" 
+}'
+         """
+            
         }
     }
     
